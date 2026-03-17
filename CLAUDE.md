@@ -50,6 +50,13 @@ uv run ruff format .            # Format
 
 Create `products/mysite/` with `__init__.py`, `__main__.py`, `config.py`, `toc.py` following the pattern of existing products. The key customization points are the CSS/JS in `config.py` (to strip navigation chrome and force light theme) and the TOC source in `toc.py`.
 
+## Release Process
+
+1. Run lint: `uv run ruff check .` and `uv run ruff format --check .`
+2. Push to `main` (CI runs lint via GitHub Actions)
+3. Generate PDFs: `python -m products.<name>` for each product
+4. Create a GitHub Release with a version tag, attach the generated PDFs
+
 ## Key Design Decisions
 
 - Each page is rendered and saved as an individual PDF first (to `<name>-docs-pdf/` directory), then merged. This allows incremental re-runs — existing PDFs are skipped.
