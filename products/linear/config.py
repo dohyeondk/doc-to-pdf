@@ -180,8 +180,6 @@ PREPARE_JS = """() => {
 
 PRODUCT_SPEC = ProductSpec(
     name="Linear",
-    output_dir="linear-docs-pdf",
-    merged_filename="Linear.pdf",
     custom_css=CUSTOM_CSS,
     prepare_js=PREPARE_JS,
     content_selector="article",

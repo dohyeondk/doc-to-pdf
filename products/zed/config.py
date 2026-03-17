@@ -18,8 +18,6 @@ body, #body-container {
 
 PRODUCT_SPEC = ProductSpec(
     name="Zed",
-    output_dir="zed-docs-pdf",
-    merged_filename="Zed.pdf",
     custom_css=CUSTOM_CSS,
     prepare_js=None,
     content_selector=None,

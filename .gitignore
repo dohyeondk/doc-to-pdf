@@ -8,5 +8,4 @@ wheels/
 .venv
 
 .DS_Store
-*.pdf
-*-docs-pdf/
+output/

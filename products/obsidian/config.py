@@ -63,8 +63,6 @@ PREPARE_JS = """() => {
 
 PRODUCT_SPEC = ProductSpec(
     name="Obsidian",
-    output_dir="obsidian-docs-pdf",
-    merged_filename="Obsidian.pdf",
     custom_css=CUSTOM_CSS,
     prepare_js=PREPARE_JS,
     content_selector=".markdown-rendered",

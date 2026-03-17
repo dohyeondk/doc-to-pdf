@@ -43,8 +43,6 @@ class PdfConfig:
 class ProductSpec:
     """Product-specific configuration provided by each product module."""
     name: str
-    output_dir: str
-    merged_filename: str
     custom_css: str
     prepare_js: Optional[str] = None
     content_selector: Optional[str] = None
@@ -53,3 +51,13 @@ class ProductSpec:
     pdf_metadata_title: str = ""
     pdf_metadata_author: str = ""
     has_sections: bool = False
+
+    @property
+    def output_dir(self) -> str:
+        """Per-product subdirectory under output/."""
+        return f"output/{self.name.lower()}"
+
+    @property
+    def merged_filename(self) -> str:
+        """Final merged PDF path under output/."""
+        return f"output/{self.name}.pdf"
