@@ -1,6 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
-from playwright.sync_api import sync_playwright, Browser
+
+from playwright.sync_api import Browser, sync_playwright
 
 
 @contextmanager

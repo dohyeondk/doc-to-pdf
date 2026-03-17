@@ -1,11 +1,11 @@
 import logging
 import os
 
-from pypdf import PdfWriter, PdfReader
+from pypdf import PdfReader, PdfWriter
 from pypdf.errors import PdfReadError
 
-from shared.types import TocItem, ProductSpec
 from shared.pdf_utils import get_pdf_filename
+from shared.types import ProductSpec, TocItem
 
 log = logging.getLogger(__name__)
 
@@ -44,19 +44,18 @@ def merge_pdfs_with_toc(
                 writer.add_page(page)
 
             if product.has_sections and item.type == "section":
-                section_bookmark = writer.add_outline_item(
-                    item.title, start_page
-                )
+                section_bookmark = writer.add_outline_item(item.title, start_page)
             elif product.has_sections and item.section and section_bookmark:
-                writer.add_outline_item(
-                    item.title, start_page, parent=section_bookmark
-                )
+                writer.add_outline_item(item.title, start_page, parent=section_bookmark)
             else:
                 writer.add_outline_item(item.title, start_page)
 
             log.info(
                 "    [%d/%d] Added: %s (page %d)",
-                i, len(toc_items), item.title, start_page + 1,
+                i,
+                len(toc_items),
+                item.title,
+                start_page + 1,
             )
 
         except (PdfReadError, OSError) as e:
@@ -65,10 +64,12 @@ def merge_pdfs_with_toc(
 
     total_pages = len(writer.pages)
 
-    writer.add_metadata({
-        "/Title": product.pdf_metadata_title or f"{product.name} Documentation",
-        "/Author": product.pdf_metadata_author or product.name,
-    })
+    writer.add_metadata(
+        {
+            "/Title": product.pdf_metadata_title or f"{product.name} Documentation",
+            "/Author": product.pdf_metadata_author or product.name,
+        }
+    )
 
     log.info("Created TOC with %d entries (%d skipped)", len(toc_items), skipped)
 

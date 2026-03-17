@@ -1,10 +1,16 @@
+import logging
+
 import requests
+
 from shared.types import TocItem
+
+log = logging.getLogger(__name__)
 
 SITE_UID = "f786db9fac45774fa4f0d8112e232d67"
 BASE_URL = "https://help.obsidian.md"
 OPTIONS_API = f"https://publish-01.obsidian.md/options/{SITE_UID}"
 CACHE_API = f"https://publish-01.obsidian.md/cache/{SITE_UID}"
+REQUEST_TIMEOUT = 30
 
 
 def _make_toc_entry(path: str) -> TocItem:
@@ -31,13 +37,19 @@ def _make_section_entry(folder_name: str) -> TocItem:
 
 def get_toc_items() -> list[TocItem]:
     """Get the ordered list of documentation pages from the Obsidian Publish API."""
-    response = requests.get(OPTIONS_API, timeout=30)
-    response.raise_for_status()
-    options = response.json()
+    try:
+        response = requests.get(OPTIONS_API, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+        options = response.json()
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to fetch Obsidian options from {OPTIONS_API}: {e}") from e
 
-    cache_response = requests.get(CACHE_API, timeout=30)
-    cache_response.raise_for_status()
-    all_cache_pages = set(cache_response.json().keys())
+    try:
+        cache_response = requests.get(CACHE_API, timeout=REQUEST_TIMEOUT)
+        cache_response.raise_for_status()
+        all_cache_pages = set(cache_response.json().keys())
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to fetch Obsidian cache from {CACHE_API}: {e}") from e
 
     nav_ordering = options.get("navigationOrdering", [])
     hidden_items = set(options.get("navigationHiddenItems", []))
@@ -67,18 +79,13 @@ def get_toc_items() -> list[TocItem]:
             toc_items.append(_make_section_entry(entry))
 
             folder_prefix = entry + "/"
-            has_explicit_children = any(
-                e.startswith(folder_prefix) and e.endswith(".md")
-                for e in nav_set
-            )
+            has_explicit_children = any(e.startswith(folder_prefix) and e.endswith(".md") for e in nav_set)
 
             if not has_explicit_children:
                 child_pages = sorted(
-                    p for p in all_cache_pages
-                    if p.startswith(folder_prefix)
-                    and p.endswith(".md")
-                    and p not in hidden_items
-                    and p not in seen
+                    p
+                    for p in all_cache_pages
+                    if p.startswith(folder_prefix) and p.endswith(".md") and p not in hidden_items and p not in seen
                 )
                 for child in child_pages:
                     if any(child.startswith(p) for p in skip_prefixes):

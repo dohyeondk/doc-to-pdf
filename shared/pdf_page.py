@@ -1,8 +1,11 @@
 import logging
 import os
-from playwright.sync_api import Browser, TimeoutError as PlaywrightTimeout
-from shared.types import PdfConfig, ProductSpec
+
+from playwright.sync_api import Browser
+from playwright.sync_api import TimeoutError as PlaywrightTimeout
+
 from shared.pdf_utils import strip_trailing_blank_pages
+from shared.types import PdfConfig, ProductSpec
 
 log = logging.getLogger(__name__)
 
@@ -27,10 +30,10 @@ def download_page_as_pdf(
         # Wait for content selector if specified
         if product.content_selector:
             try:
-                page.wait_for_selector(product.content_selector, timeout=10000)
+                page.wait_for_selector(product.content_selector, timeout=product.selector_timeout_ms)
             except PlaywrightTimeout:
                 log.debug("Content selector %r not found, proceeding anyway", product.content_selector)
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(product.settle_delay_ms)
 
         # Scroll through page to trigger lazy-loaded images
         if product.scroll_for_lazy_images:
@@ -51,7 +54,7 @@ def download_page_as_pdf(
                     }, delay);
                 });
             }""")
-            page.wait_for_timeout(1000)
+            page.wait_for_timeout(product.settle_delay_ms)
 
         # Inject CSS overrides
         page.add_style_tag(content=product.custom_css)

@@ -1,10 +1,11 @@
 import re
-from pypdf import PdfWriter, PdfReader
+
+from pypdf import PdfReader, PdfWriter
 
 
 def sanitize_filename(filename: str) -> str:
     """Remove filesystem-invalid characters."""
-    return re.sub(r'[<>:"/\\|?*]', '', filename)
+    return re.sub(r'[<>:"/\\|?*]', "", filename)
 
 
 def get_pdf_filename(index: int, title: str) -> str:

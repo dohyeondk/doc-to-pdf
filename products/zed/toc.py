@@ -1,14 +1,23 @@
+import logging
+
 import requests
 from bs4 import BeautifulSoup
+
 from shared.types import TocItem
 
+log = logging.getLogger(__name__)
+
 BASE_URL = "https://zed.dev/docs"
+REQUEST_TIMEOUT = 30
 
 
 def get_toc_items() -> list[TocItem]:
     """Get the list of TOC items from Zed documentation via HTML scraping."""
-    response = requests.get(BASE_URL, timeout=30)
-    response.raise_for_status()
+    try:
+        response = requests.get(BASE_URL, timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise RuntimeError(f"Failed to fetch Zed docs from {BASE_URL}: {e}") from e
 
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -35,11 +44,13 @@ def get_toc_items() -> list[TocItem]:
         full_url = f"{BASE_URL}/{href}"
 
         seen_urls.add(href)
-        toc_items.append(TocItem(
-            type="page",
-            title=text,
-            url=full_url,
-            section=None,
-        ))
+        toc_items.append(
+            TocItem(
+                type="page",
+                title=text,
+                url=full_url,
+                section=None,
+            )
+        )
 
     return toc_items

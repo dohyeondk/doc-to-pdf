@@ -3,14 +3,17 @@ import os
 
 from playwright.sync_api import Error as PlaywrightError
 
-from shared.types import TocItem, PdfConfig, ProductSpec
 from shared.browser import managed_browser
-from shared.pdf_page import download_page_as_pdf
-from shared.section_page import generate_section_title_pdf
 from shared.pdf_merge import merge_pdfs_with_toc
+from shared.pdf_page import download_page_as_pdf
 from shared.pdf_utils import get_pdf_filename
+from shared.section_page import generate_section_title_pdf
+from shared.types import PdfConfig, ProductSpec, TocItem
 
 log = logging.getLogger(__name__)
+
+
+MAX_RETRIES = 2
 
 
 def run_pipeline(
@@ -39,9 +42,7 @@ def run_pipeline(
             if item.type == "section":
                 log.info("%s Section: %s", progress, item.title)
                 try:
-                    created = generate_section_title_pdf(
-                        item.title, output_path, browser, pdf_config
-                    )
+                    created = generate_section_title_pdf(item.title, output_path, browser, pdf_config)
                     log.info("    %s", "Created section page" if created else "Skipped (already exists)")
                 except PlaywrightError as e:
                     log.error("    Error creating section page: %s", e)
@@ -51,14 +52,17 @@ def run_pipeline(
                 log.info("    URL: %s", item.url)
                 log.info("    Saving to: %s", filename)
 
-                try:
-                    downloaded = download_page_as_pdf(
-                        item.url, output_path, browser, pdf_config, product
-                    )
-                    log.info("    %s", "Success" if downloaded else "Skipped (already exists)")
-                except (PlaywrightError, OSError) as e:
-                    log.error("    Error: %s", e)
-                    failures.append((item.title, str(e)))
+                for attempt in range(1, MAX_RETRIES + 1):
+                    try:
+                        downloaded = download_page_as_pdf(item.url, output_path, browser, pdf_config, product)
+                        log.info("    %s", "Success" if downloaded else "Skipped (already exists)")
+                        break
+                    except (PlaywrightError, OSError) as e:
+                        if attempt < MAX_RETRIES:
+                            log.warning("    Attempt %d failed, retrying: %s", attempt, e)
+                        else:
+                            log.error("    Error (after %d attempts): %s", MAX_RETRIES, e)
+                            failures.append((item.title, str(e)))
 
     log.info("All PDFs saved to: %s/", output_dir)
 

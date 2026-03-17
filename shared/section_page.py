@@ -1,6 +1,8 @@
 import html
 import os
+
 from playwright.sync_api import Browser
+
 from shared.types import PdfConfig
 
 
@@ -18,7 +20,8 @@ def generate_section_title_pdf(
     page = browser.new_page()
     try:
         safe_title = html.escape(title)
-        page.set_content(f"""<!DOCTYPE html>
+        page.set_content(
+            f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <style>
   html, body {{
@@ -35,7 +38,9 @@ def generate_section_title_pdf(
     text-align: center;
   }}
 </style>
-</head><body><h1>{safe_title}</h1></body></html>""", wait_until="load")
+</head><body><h1>{safe_title}</h1></body></html>""",
+            wait_until="load",
+        )
         page.pdf(
             path=output_path,
             format=pdf_config.paper_size,

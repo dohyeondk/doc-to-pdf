@@ -6,7 +6,41 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "playwright>=1.40.0",
-    "pypdf>=5.1.0",
+    "pypdf>=5.1.0,<6",
     "requests>=2.31.0",
     "beautifulsoup4>=4.12.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "types-requests>=2.31.0",
+    "types-beautifulsoup4>=4.12.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "RUF",   # ruff-specific rules
+]
+
+[tool.ruff.lint.per-file-ignores]
+# JS strings contain intentional Unicode characters for matching nav arrows
+"products/linear/config.py" = ["RUF001"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

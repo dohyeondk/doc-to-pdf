@@ -21,6 +21,13 @@ python -m products.<name> --font-scale 90 --paper-size A4
 
 Python 3.10+, managed with uv. Virtual env at `.venv/`. No test suite exists.
 
+```bash
+# Linting & formatting
+uv run ruff check .            # Lint
+uv run ruff check --fix .      # Lint with auto-fix
+uv run ruff format .            # Format
+```
+
 ## Architecture
 
 **Two-layer design: shared library + product modules.**

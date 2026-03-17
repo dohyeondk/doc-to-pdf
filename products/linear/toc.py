@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+
 from shared.types import TocItem
 
 BASE_URL = "https://linear.app"
@@ -60,23 +61,27 @@ def get_toc_items() -> list[TocItem]:
         if not section or not group["links"]:
             continue
 
-        items.append(TocItem(
-            type="section",
-            title=section,
-            url=None,
-            section=section,
-        ))
+        items.append(
+            TocItem(
+                type="section",
+                title=section,
+                url=None,
+                section=section,
+            )
+        )
 
         for link in group["links"]:
             href = link["href"]
             if href in seen_hrefs:
                 continue
             seen_hrefs.add(href)
-            items.append(TocItem(
-                type="page",
-                title=link["title"],
-                url=f"{BASE_URL}{href}",
-                section=section,
-            ))
+            items.append(
+                TocItem(
+                    type="page",
+                    title=link["title"],
+                    url=f"{BASE_URL}{href}",
+                    section=section,
+                )
+            )
 
     return items
