@@ -1,161 +1,82 @@
+from playwright.sync_api import sync_playwright
 from shared.types import TocItem
 
 BASE_URL = "https://linear.app"
+DOCS_URL = f"{BASE_URL}/docs"
 
-NAV_STRUCTURE = [
-    {"section": "Getting started", "pages": [
-        ("Start Guide", "/docs/start-guide"),
-        ("Concepts", "/docs/conceptual-model"),
-        ("Download Linear", "/docs/get-the-app"),
-    ]},
-    {"section": "Account", "pages": [
-        ("Profile", "/docs/profile"),
-        ("Preferences", "/docs/account-preferences"),
-        ("Notifications", "/docs/notifications"),
-        ("Security & Access", "/docs/security-and-access"),
-    ]},
-    {"section": "Your sidebar", "pages": [
-        ("Inbox", "/docs/inbox"),
-        ("My issues", "/docs/my-issues"),
-        ("Pulse", "/docs/pulse"),
-        ("Pull Request Reviews", "/docs/pull-request-reviews"),
-        ("Favorites", "/docs/favorites"),
-    ]},
-    {"section": "Teams", "pages": [
-        ("Teams", "/docs/teams"),
-        ("Private teams", "/docs/private-teams"),
-        ("Sub-teams", "/docs/sub-teams"),
-        ("Issue status", "/docs/configuring-workflows"),
-    ]},
-    {"section": "Issues", "pages": [
-        ("Create issues", "/docs/creating-issues"),
-        ("Edit issues", "/docs/editing-issues"),
-        ("Assign and delegate issues", "/docs/assigning-issues"),
-        ("Select issues", "/docs/select-issues"),
-        ("Parent and sub-issues", "/docs/parent-and-sub-issues"),
-        ("Issue templates", "/docs/issue-templates"),
-        ("Issue documents", "/docs/issue-documents"),
-        ("Comments and reactions", "/docs/comment-on-issues"),
-        ("Editor", "/docs/editor"),
-        ("Delete and archive issues", "/docs/delete-archive-issues"),
-        ("Customer Requests", "/docs/customer-requests"),
-    ]},
-    {"section": "Issue properties", "pages": [
-        ("Due dates", "/docs/due-dates"),
-        ("Estimates", "/docs/estimates"),
-        ("Issue relations", "/docs/issue-relations"),
-        ("Labels", "/docs/labels"),
-        ("Priority", "/docs/priority"),
-        ("SLAs", "/docs/sla"),
-    ]},
-    {"section": "Projects", "pages": [
-        ("Projects", "/docs/projects"),
-        ("Initiative and Project updates", "/docs/initiative-and-project-updates"),
-        ("Project milestones", "/docs/project-milestones"),
-        ("Project overview", "/docs/project-overview"),
-        ("Project documents", "/docs/project-documents"),
-        ("Project graph", "/docs/project-graph"),
-        ("Project status", "/docs/project-status"),
-        ("Project labels", "/docs/project-labels"),
-        ("Project notifications", "/docs/project-notifications"),
-        ("Project priority", "/docs/project-priority"),
-        ("Project dependencies", "/docs/project-dependencies"),
-        ("Project templates", "/docs/project-templates"),
-    ]},
-    {"section": "Initiatives", "pages": [
-        ("Initiatives", "/docs/initiatives"),
-        ("Sub-initiatives", "/docs/sub-initiatives"),
-    ]},
-    {"section": "Cycles", "pages": [
-        ("Cycles", "/docs/use-cycles"),
-        ("Update cycles", "/docs/update-cycles"),
-        ("Cycle graph", "/docs/cycle-graph"),
-    ]},
-    {"section": "Views", "pages": [
-        ("Board layout", "/docs/board-layout"),
-        ("Timeline", "/docs/timeline"),
-        ("Custom Views", "/docs/custom-views"),
-        ("Triage", "/docs/triage"),
-        ("User views", "/docs/user-views"),
-        ("Peek preview", "/docs/peek"),
-        ("Team pages", "/docs/default-team-pages"),
-        ("Label views", "/docs/label-views"),
-    ]},
-    {"section": "Find and filter", "pages": [
-        ("Search", "/docs/search"),
-        ("Filters", "/docs/filters"),
-        ("Display options", "/docs/display-options"),
-    ]},
-    {"section": "AI", "pages": [
-        ("AI Agents", "/docs/agents-in-linear"),
-        ("MCP server", "/docs/mcp"),
-        ("Triage Intelligence", "/docs/triage-intelligence"),
-    ]},
-    {"section": "Integrations", "pages": [
-        ("Integration Directory", "/docs/integration-directory"),
-        ("Airbyte", "/docs/airbyte"),
-        ("Asks", "/docs/linear-asks"),
-        ("Discord", "/docs/discord"),
-        ("Figma", "/docs/figma"),
-        ("Front", "/docs/front"),
-        ("GitHub", "/docs/github-integration"),
-        ("GitLab", "/docs/gitlab"),
-        ("Google Sheets", "/docs/google-sheets"),
-        ("Gong", "/docs/gong"),
-        ("Intercom", "/docs/intercom"),
-        ("Jira", "/docs/jira"),
-        ("Microsoft Teams", "/docs/microsoft-teams"),
-        ("Notion", "/docs/notion"),
-        ("Salesforce", "/docs/salesforce"),
-        ("Sentry", "/docs/sentry"),
-        ("Slack", "/docs/slack"),
-        ("Zapier", "/docs/zapier"),
-        ("Zendesk", "/docs/zendesk"),
-    ]},
-    {"section": "Analytics", "pages": [
-        ("Dashboards", "/docs/dashboards"),
-        ("Insights", "/docs/insights"),
-        ("Exporting Data", "/docs/exporting-data"),
-    ]},
-    {"section": "Administration", "pages": [
-        ("Workspaces", "/docs/workspaces"),
-        ("Login methods", "/docs/login-methods"),
-        ("Invite members", "/docs/invite-members"),
-        ("Members and roles", "/docs/members-roles"),
-        ("Security", "/docs/security"),
-        ("SAML", "/docs/saml-and-access-control"),
-        ("SCIM", "/docs/scim"),
-        ("API and Webhooks", "/docs/api-and-webhooks"),
-        ("Third-Party App Approvals", "/docs/third-party-application-approvals"),
-        ("Billing and plans", "/docs/billing-and-plans"),
-        ("Audit log", "/docs/audit-log"),
-        ("Importer", "/docs/import-issues"),
-    ]},
-]
+
+def _scrape_nav_structure() -> list[dict]:
+    """Scrape the sidebar navigation from Linear docs using Playwright.
+
+    The sidebar uses collapsible sections that must be expanded before
+    the child links appear in the DOM.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            page = browser.new_page()
+            page.goto(DOCS_URL, wait_until="networkidle")
+
+            # Expand all collapsed sidebar sections
+            page.evaluate("""() => {
+                document.querySelectorAll('[class*="Collapsible_button"]').forEach(btn => {
+                    if (btn.getAttribute('data-state') === 'closed') {
+                        btn.click();
+                    }
+                });
+            }""")
+            page.wait_for_timeout(1000)
+
+            # Extract sections and their child links
+            return page.evaluate("""() => {
+                const sidebar = document.querySelector('[class*="Sidebar_listInner"]');
+                if (!sidebar) return [];
+
+                return Array.from(sidebar.children).map(li => {
+                    const button = li.querySelector('[class*="Collapsible_button"]');
+                    const section = button ? button.textContent.trim() : '';
+
+                    const links = Array.from(li.querySelectorAll('a[href^="/docs/"]')).map(a => ({
+                        title: a.textContent.trim(),
+                        href: a.getAttribute('href'),
+                    })).filter(l => l.title && l.href);
+
+                    return {section, links};
+                });
+            }""")
+        finally:
+            browser.close()
 
 
 def get_toc_items() -> list[TocItem]:
-    """Build flat TOC list with section dividers."""
+    """Build flat TOC list with section dividers from live sidebar."""
+    nav_structure = _scrape_nav_structure()
+
     items = []
     seen_hrefs = set()
 
-    for group in NAV_STRUCTURE:
+    for group in nav_structure:
+        section = group["section"]
+        if not section or not group["links"]:
+            continue
+
         items.append(TocItem(
             type="section",
-            title=group["section"],
+            title=section,
             url=None,
-            section=group["section"],
+            section=section,
         ))
 
-        for title, href in group["pages"]:
+        for link in group["links"]:
+            href = link["href"]
             if href in seen_hrefs:
                 continue
             seen_hrefs.add(href)
             items.append(TocItem(
                 type="page",
-                title=title,
+                title=link["title"],
                 url=f"{BASE_URL}{href}",
-                section=group["section"],
+                section=section,
             ))
 
     return items

@@ -6,7 +6,7 @@ Download documentation sites as single PDFs with bookmarked table of contents.
 
 | Product | Command | Sections | Source |
 |---------|---------|----------|--------|
-| [Linear](https://linear.app/docs/) | `python -m products.linear` | 15 sections, ~98 pages | Hardcoded nav structure |
+| [Linear](https://linear.app/docs/) | `python -m products.linear` | 15 sections, ~97 pages | Playwright sidebar scraping |
 | [Obsidian](https://help.obsidian.md/) | `python -m products.obsidian` | Sections from Publish API | Obsidian Publish API |
 | [Zed](https://zed.dev/docs/) | `python -m products.zed` | Flat (no sections) | HTML sidebar scraping |
 
@@ -72,9 +72,7 @@ shared/           # Reusable PDF generation library
     pipeline.py   # Orchestration: download all + merge
 
 products/         # Site-specific modules
-    linear/       # linear.app/docs
-    obsidian/     # help.obsidian.md
-    zed/          # zed.dev/docs
+    <name>/       # One directory per documentation site
 ```
 
 ## License
