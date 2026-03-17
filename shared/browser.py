@@ -1,0 +1,13 @@
+from contextlib import contextmanager
+from playwright.sync_api import sync_playwright, Browser
+
+
+@contextmanager
+def managed_browser() -> Browser:
+    """Context manager that yields a reusable Chromium browser instance."""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            yield browser
+        finally:
+            browser.close()

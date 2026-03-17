@@ -1,0 +1,12 @@
+[project]
+name = "doc-to-pdf"
+version = "1.0.0"
+description = "Download documentation sites as single PDFs with table of contents"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "playwright>=1.40.0",
+    "pypdf>=5.1.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+]
