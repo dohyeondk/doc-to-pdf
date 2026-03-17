@@ -54,8 +54,8 @@ Create `products/mysite/` with `__init__.py`, `__main__.py`, `config.py`, `toc.p
 
 1. Run lint: `uv run ruff check .` and `uv run ruff format --check .`
 2. Push to `main` (CI runs lint via GitHub Actions)
-3. Generate PDFs: `python -m products.<name>` for each product
-4. Create a GitHub Release with a version tag, attach the generated PDFs
+3. Tag and push: `git tag v<version> && git push --tags`
+4. GitHub Actions generates all PDFs and creates a Release with them attached
 
 ## Key Design Decisions
 
