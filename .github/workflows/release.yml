@@ -29,9 +29,9 @@ jobs:
 
       - name: Generate PDFs
         run: |
-          python -m products.linear
-          python -m products.obsidian
-          python -m products.zed
+          uv run python -m products.linear
+          uv run python -m products.obsidian
+          uv run python -m products.zed
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
