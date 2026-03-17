@@ -1,5 +1,9 @@
 import argparse
+import logging
+
 from shared.types import PdfConfig, ProductSpec
+
+log = logging.getLogger(__name__)
 
 
 def parse_args(product: ProductSpec | None = None) -> PdfConfig:
@@ -34,8 +38,26 @@ def parse_args(product: ProductSpec | None = None) -> PdfConfig:
         "--no-background", action="store_true",
         help="Disable background printing"
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true",
+        help="Enable debug logging"
+    )
 
     args = parser.parse_args()
+
+    # Configure logging based on verbosity
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(message)s",
+    )
+
+    # Validate arguments
+    if not 10 <= args.font_scale <= 300:
+        parser.error("--font-scale must be between 10 and 300")
+
+    margins = [args.margin_top, args.margin_right, args.margin_bottom, args.margin_left]
+    if any(m < 0 for m in margins):
+        parser.error("Margins cannot be negative")
 
     return PdfConfig(
         paper_size=args.paper_size,

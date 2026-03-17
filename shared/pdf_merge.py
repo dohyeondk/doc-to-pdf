@@ -1,7 +1,13 @@
+import logging
 import os
+
 from pypdf import PdfWriter, PdfReader
+from pypdf.errors import PdfReadError
+
 from shared.types import TocItem, ProductSpec
 from shared.pdf_utils import get_pdf_filename
+
+log = logging.getLogger(__name__)
 
 
 def merge_pdfs_with_toc(
@@ -17,15 +23,17 @@ def merge_pdfs_with_toc(
     """
     writer = PdfWriter()
 
-    print("\nMerging PDFs with table of contents...")
+    log.info("Merging PDFs with table of contents...")
 
     section_bookmark = None
+    skipped = 0
 
     for i, item in enumerate(toc_items, 1):
         pdf_path = os.path.join(output_dir, get_pdf_filename(i, item.title))
 
         if not os.path.exists(pdf_path):
-            print(f"    Warning: Skipping missing file: {pdf_path}")
+            log.warning("    Skipping missing file: %s", pdf_path)
+            skipped += 1
             continue
 
         try:
@@ -46,12 +54,14 @@ def merge_pdfs_with_toc(
             else:
                 writer.add_outline_item(item.title, start_page)
 
-            print(
-                f"    [{i}/{len(toc_items)}] Added: {item.title} (page {start_page + 1})"
+            log.info(
+                "    [%d/%d] Added: %s (page %d)",
+                i, len(toc_items), item.title, start_page + 1,
             )
 
-        except Exception as e:
-            print(f"    Error merging {pdf_path}: {e}")
+        except (PdfReadError, OSError) as e:
+            log.error("    Error merging %s: %s", pdf_path, e)
+            skipped += 1
 
     total_pages = len(writer.pages)
 
@@ -60,12 +70,12 @@ def merge_pdfs_with_toc(
         "/Author": product.pdf_metadata_author or product.name,
     })
 
-    print(f"\nCreated TOC with {len(toc_items)} entries")
+    log.info("Created TOC with %d entries (%d skipped)", len(toc_items), skipped)
 
     with open(output_path, "wb") as output_file:
         writer.write(output_file)
 
-    print(f"Merged PDF saved to: {output_path}")
-    print(f"  Total pages: {total_pages}")
+    log.info("Merged PDF saved to: %s", output_path)
+    log.info("  Total pages: %d", total_pages)
 
     return output_path

@@ -31,11 +31,11 @@ def _make_section_entry(folder_name: str) -> TocItem:
 
 def get_toc_items() -> list[TocItem]:
     """Get the ordered list of documentation pages from the Obsidian Publish API."""
-    response = requests.get(OPTIONS_API)
+    response = requests.get(OPTIONS_API, timeout=30)
     response.raise_for_status()
     options = response.json()
 
-    cache_response = requests.get(CACHE_API)
+    cache_response = requests.get(CACHE_API, timeout=30)
     cache_response.raise_for_status()
     all_cache_pages = set(cache_response.json().keys())
 

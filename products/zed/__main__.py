@@ -1,15 +1,6 @@
-from shared.config import parse_args
-from shared.pipeline import run_pipeline
+from shared.product_main import product_main
 from products.zed.config import PRODUCT_SPEC
 from products.zed.toc import get_toc_items
 
-
-def main():
-    pdf_config = parse_args(PRODUCT_SPEC)
-    items = get_toc_items()
-    print(f"Building {PRODUCT_SPEC.name} documentation...\n")
-    run_pipeline(PRODUCT_SPEC, items, pdf_config)
-
-
 if __name__ == "__main__":
-    main()
+    product_main(PRODUCT_SPEC, get_toc_items)

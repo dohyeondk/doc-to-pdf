@@ -7,7 +7,7 @@ BASE_URL = "https://zed.dev/docs"
 
 def get_toc_items() -> list[TocItem]:
     """Get the list of TOC items from Zed documentation via HTML scraping."""
-    response = requests.get(BASE_URL)
+    response = requests.get(BASE_URL, timeout=30)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
